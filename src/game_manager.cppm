@@ -38,4 +38,7 @@ private:
 private:
 	void player_move_logic(const PlayerController& st, std::vector<Vertex>& vertices, std::uint32_t player_position);
 	void player_shoot_logic(const PlayerController& st, const graph::container::undirected_adjacency_list<int, Vertex>& g, std::vector<Vertex>& vertices, std::uint32_t player_position);
+private:
+	void print_graph(const graph::container::undirected_adjacency_list<int, Vertex>& g, std::span<Vertex> v);
+	void debug_state(std::span<Vertex> vertices);
 };

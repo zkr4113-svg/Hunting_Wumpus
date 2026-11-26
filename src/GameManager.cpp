@@ -5,6 +5,7 @@ module game_manager;
 
 void GameManager::game_loop()
 {
+	print_graph(m_graph_map, m_vertices);
 	while (!game_over)
 	{
 		auto player_position{ where_player(m_vertices) };
@@ -27,6 +28,9 @@ void GameManager::game_loop()
 		}
 
 		std::println("");
+		std::println(std::cerr, "Before Moving:");
+		debug_state(m_vertices);
+		std::println("=========================");
 		std::println("move or shoot?");
 		PlayerController player{ };
 		std::string cmd;
@@ -44,9 +48,13 @@ void GameManager::game_loop()
 		{
 			std::println(std::cerr, "parse worng");
 		}
-
+		
 
 		check_if_win();
+		std::println("=========================");
+		std::println(std::cerr, "After Moving:");
+		debug_state(m_vertices);
+		
 	}
 }
 
@@ -145,9 +153,11 @@ void GameManager::player_update(const PlayerController& st, const graph::contain
 	auto player_position{ where_player(vertices) };
 	if (st.player_action == PlayerAction::move)
 	{
-		if (graph::contains_edge(g, static_cast<uint32_t>(st.room_id), player_position))
+
+		bool is_in_vertices{ static_cast<std::size_t>(st.room_id) > 0 && static_cast<std::size_t>(st.room_id) < vertices.size() };
+		if ( is_in_vertices && graph::contains_edge(g, player_position, static_cast<uint32_t>(st.room_id)))
 		{
-			std::println(std::cerr, "the edge is not exist");
+			std::println(std::cerr, "the edge is exist");
 			player_move_logic(st, vertices,player_position);
 		}
 		else
@@ -184,9 +194,9 @@ void GameManager::player_shoot_logic(const PlayerController& st, const graph::co
 		three_rooms_states.push_back(graph::contains_edge(g, st.room_ids[i - 1], st.room_ids[i]));
 	}
 
-	bool is_three_rooms_through{ std::ranges::all_of(three_rooms_states,[](const auto elem) { return elem == true; }) };
+	
 
-	if (is_three_rooms_through)
+	if (bool is_three_rooms_through{ std::ranges::all_of(three_rooms_states,[](const auto elem) { return elem == true; }) }; is_three_rooms_through)
 	{
 		for (std::size_t i{ }; i < st.room_ids.size(); ++i)
 		{
@@ -237,4 +247,38 @@ void GameManager::player_shoot_logic(const PlayerController& st, const graph::co
 
 	}
 
+}
+
+void GameManager::print_graph(const graph::container::undirected_adjacency_list<int, Vertex>& g, std::span<Vertex> v)
+{
+	std::println("Vertices:");
+	for (auto [uid, uv] : graph::views::vertexlist(g))
+	{
+		std::print("{} ", uid);
+	}
+	std::println("");
+
+	std::println("edges:");
+	for (auto [uid, vid, uv] : graph::views::edgelist(g))
+	{
+		std::println("{} -> {}", uid, vid);
+	}
+
+	for (std::uint32_t i{ }; i != v.size(); ++i)
+	{
+		std::println("id_{} neighbors:", i);
+		for (auto [vid, n] : graph::views::neighbors(g, i))
+		{
+			std::print("{} ", vid);
+		}
+		std::println("");
+	}
+}
+
+void GameManager::debug_state(std::span<Vertex> vertices)
+{
+	for (const auto& vi : vertices)
+	{
+		std::println("room id: {}, state: {}", vi.get_id(), vi.get_state().to_string());
+	}
 }
