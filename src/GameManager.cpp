@@ -5,29 +5,11 @@ module game_manager;
 
 void GameManager::game_loop()
 {
-	print_graph(m_graph_map, m_vertices);
 	while (!game_over)
 	{
 		auto player_position{ where_player(m_vertices) };
-		std::println("you are in room {}", player_position);
-		std::print("this room can go to: ");
-		std::uint32_t point{ };
-		for (auto [vid, n] : graph::views::neighbors(m_graph_map, player_position))
-		{
-			std::print("{} ", vid);
-			point = static_cast<std::uint32_t>(vid);
-		}
-
-		if (graph::contains_edge(m_graph_map, player_position, point))
-		{
-			std::println(std::cerr, "the edge exist");
-		}
-		else
-		{
-			std::println(std::cerr, "the edge is not exist");
-		}
-
-		std::println("");
+		print_roads(m_graph_map, player_position);
+		feel_something(m_graph_map, m_vertices, player_position);
 		std::println(std::cerr, "Before Moving:");
 		debug_state(m_vertices);
 		std::println("=========================");
@@ -156,22 +138,27 @@ void GameManager::player_update(const PlayerController& st, const graph::contain
 	auto player_position{ where_player(vertices) };
 	if (st.player_action == PlayerAction::move)
 	{
-		bool is_in_vertices{ static_cast<std::size_t>(st.room_id) > 0 && static_cast<std::size_t>(st.room_id) < vertices.size() };
-		if ( is_in_vertices && graph::contains_edge(g, player_position, st.room_id) || st.room_id == 0)
+		if (st.room_id == 0)
 		{
-			std::println(std::cerr, "the edge is exist");
+			player_move_logic(st, vertices, player_position);
+			is_player_move_successfully = true;
+			return;
+		}
+
+		bool is_in_vertices{ static_cast<std::size_t>(st.room_id) > 0 && static_cast<std::size_t>(st.room_id) < vertices.size() };
+		if ( is_in_vertices && graph::contains_edge(g, player_position, st.room_id))
+		{
 			player_move_logic(st, vertices,player_position);
 			is_player_move_successfully = true;
+		}
+		else if (st.room_id == player_position)
+		{
+			std::println("I am already here");
+			is_player_move_successfully = false;
 		}
 		else
 		{
 			std::println("I can't go there");
-			is_player_move_successfully = false;
-		}
-
-		if (st.room_id == player_position)
-		{
-			std::println("I am already here");
 			is_player_move_successfully = false;
 		}
 
@@ -183,11 +170,6 @@ void GameManager::player_update(const PlayerController& st, const graph::contain
 			return id >= 0 && static_cast<std::size_t>(id) < vertices.size();
 			})
 		};
-
-		if (st.room_ids.empty())
-		{
-			std::println("Please tell me shoot where");
-		}
 
 		if (all_in_vertices)
 		{
@@ -208,20 +190,25 @@ void GameManager::player_update(const PlayerController& st, const graph::contain
 
 void GameManager::player_move_logic(const PlayerController& st, std::vector<Vertex>& vertices, std::uint32_t player_position)
 {
+	for (std::size_t i{ }; i < vertices.size(); ++i)
+	{
+		if (vertices[i].get_state().test(std::to_underlying(Vertex::StateFlags::hole_state)) &&
+			vertices[i].get_state().test(std::to_underlying(Vertex::StateFlags::player_state)))
+		{
+			is_player_dead = true;
+			break;
+		}
+
+		if (vertices[i].get_state().test(std::to_underlying(Vertex::StateFlags::wumpus_state)) &&
+			vertices[i].get_state().test(std::to_underlying(Vertex::StateFlags::player_state)))
+		{
+			is_player_dead = true;
+			break;
+		}
+	}
+
 	vertices[st.room_id].set_state(Vertex::StateFlags::player_state);
 	vertices[player_position].flip_state(Vertex::StateFlags::player_state);
-
-	if (vertices[st.room_id].get_state().test(std::to_underlying(Vertex::StateFlags::hole_state)) &&
-		vertices[st.room_id].get_state().test(std::to_underlying(Vertex::StateFlags::player_state)))
-	{
-		is_player_dead = true;
-	}
-
-	if (vertices[st.room_id].get_state().test(std::to_underlying(Vertex::StateFlags::wumpus_state)) &&
-		vertices[st.room_id].get_state().test(std::to_underlying(Vertex::StateFlags::player_state)))
-	{
-		is_player_dead = true;
-	}
 }
 
 void GameManager::player_shoot_logic(const PlayerController& st, const graph::container::undirected_adjacency_list<int, Vertex>& g, std::vector<Vertex>& vertices, std::uint32_t player_position)
@@ -319,5 +306,56 @@ void GameManager::debug_state(std::span<Vertex> vertices)
 	for (const auto& vi : vertices)
 	{
 		std::println("room id: {}, state: {}", vi.get_id(), vi.get_state().to_string());
+	}
+}
+
+void GameManager::print_roads(const graph::container::undirected_adjacency_list<int, Vertex>& g, std::uint32_t player_position) const
+{
+	std::println("I'm in room {}", player_position);
+	std::print("this room can go to: ");
+	std::uint32_t point{ };
+	for (auto [vid, n] : graph::views::neighbors(g, player_position))
+	{
+		std::print("{} ", vid);
+		point = static_cast<std::uint32_t>(vid);
+	}
+
+	std::println("");
+}
+
+void GameManager::feel_something(const graph::container::undirected_adjacency_list<int, Vertex>& g, const std::vector<Vertex>& vertices, std::uint32_t player_position) const
+{
+	std::vector<std::uint32_t> points;
+	for (auto [vid, n] : graph::views::neighbors(g, player_position))
+	{
+		points.push_back(static_cast<std::uint32_t>(vid));
+	}
+
+	bool first_feel_bug = true, first_feel_hole = true;
+
+	for (const auto index: points)
+	{
+		if (first_feel_bug)
+		{
+			if (vertices[index].get_state().test(std::to_underlying(Vertex::StateFlags::bug_state)))
+			{
+				std::println("I heard bugs.");
+				first_feel_bug = false;
+			}
+		}
+
+		if (first_feel_hole)
+		{
+			if (vertices[index].get_state().test(std::to_underlying(Vertex::StateFlags::hole_state)))
+			{
+				std::println("I felt a light breeze.");
+				first_feel_hole = false;
+			}
+		}
+
+		if (vertices[index].get_state().test(std::to_underlying(Vertex::StateFlags::wumpus_state)))
+		{
+			std::println("I semll the stink of Wumpus. ");
+		}
 	}
 }

@@ -43,4 +43,6 @@ private:
 private:
 	void print_graph(const graph::container::undirected_adjacency_list<int, Vertex>& g, std::span<Vertex> v);
 	void debug_state(std::span<Vertex> vertices);
+	void print_roads(const graph::container::undirected_adjacency_list<int, Vertex>& g, std::uint32_t player_position) const;
+	void feel_something(const graph::container::undirected_adjacency_list<int, Vertex>& g, const std::vector<Vertex>& vertices, std::uint32_t player_position) const;
 };
