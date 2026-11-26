@@ -197,6 +197,12 @@ void GameManager::player_update(const PlayerController& st, const graph::contain
 		{
 			random_shoot_logic(vertices);
 		}
+
+		if (!is_wumpus_dead)
+		{
+			random_move_logic(g, vertices, Vertex::StateFlags::wumpus_state);
+		}
+		
 	}
 }
 
@@ -206,6 +212,12 @@ void GameManager::player_move_logic(const PlayerController& st, std::vector<Vert
 	vertices[player_position].flip_state(Vertex::StateFlags::player_state);
 
 	if (vertices[st.room_id].get_state().test(std::to_underlying(Vertex::StateFlags::hole_state)) &&
+		vertices[st.room_id].get_state().test(std::to_underlying(Vertex::StateFlags::player_state)))
+	{
+		is_player_dead = true;
+	}
+
+	if (vertices[st.room_id].get_state().test(std::to_underlying(Vertex::StateFlags::wumpus_state)) &&
 		vertices[st.room_id].get_state().test(std::to_underlying(Vertex::StateFlags::player_state)))
 	{
 		is_player_dead = true;
