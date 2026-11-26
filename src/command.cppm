@@ -14,8 +14,8 @@ export enum class PlayerAction
 export struct PlayerController
 {
 	PlayerAction player_action{ PlayerAction::unknown };
-	int room_id{ };
-	std::vector<int> room_ids;
+	std::uint32_t room_id{ };
+	std::vector<std::uint32_t> room_ids;
 };
 
 export namespace grammar

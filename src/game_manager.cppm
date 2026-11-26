@@ -25,6 +25,7 @@ private:
 	bool game_over = false;
 	bool is_wumpus_dead = false;
 	bool is_player_dead = false;
+	bool is_player_move_successfully = true;
 private:
 	std::uint32_t random_num_gen(std::uint32_t min_number, std::uint32_t max_number);
 	std::uint32_t where_player(std::span<Vertex> v);
@@ -38,6 +39,7 @@ private:
 private:
 	void player_move_logic(const PlayerController& st, std::vector<Vertex>& vertices, std::uint32_t player_position);
 	void player_shoot_logic(const PlayerController& st, const graph::container::undirected_adjacency_list<int, Vertex>& g, std::vector<Vertex>& vertices, std::uint32_t player_position);
+	void random_shoot_logic(std::vector<Vertex>& vertices);
 private:
 	void print_graph(const graph::container::undirected_adjacency_list<int, Vertex>& g, std::span<Vertex> v);
 	void debug_state(std::span<Vertex> vertices);

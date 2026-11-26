@@ -16,7 +16,7 @@ void RoomGen::attach_edges(graph::container::undirected_adjacency_list<int, Vert
 	using id_type = std::uint32_t;
 	const auto n{ static_cast<id_type>(vertices.size()) };
 	
-	auto edges = graph::generators::barabasi_albert(n, id_type{ 3 }, std::random_device{ }());
+	auto edges = graph::generators::barabasi_albert(n, id_type{ 2 }, std::random_device{ }());
 
 	for (const auto& e : edges)
 	{
