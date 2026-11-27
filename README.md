@@ -11,6 +11,21 @@ There was a foul-smelling monster called the Wumpus that once plagued mankind.<b
 After a human manhunt, it was grievously wounded and fled into a cave.<br>
 The king called for brave warriors to venture into the cave and slay it.
 
+## How to play?
+You have 5 arrows first. And you can only do two actions: 'move' and 'shoot'.
+### command
+Move action: input m[room_id]  (e.g. input m1 to move Room1 )<br>
+Shoot action: input s[room_id-room_id-room_id] (e.g. input s1-2-3 or s1-2 or s1)  you can not input more than three room_id.<br>
+If the room_id is not through, the arrow will shoot randomly, it will shoot yourself too!<br>
+When you met bat, you will take to somewhere else.<br>
+When you met hole, you will fall into the hole and die.<br>
+When you met Wumpus, you will die too.<br>
+You can shoot to kill Wumpus.
+
+
+When Wumpus dead, you win the game.<br>
+When you dead or your arrows are used before the Wumpus dead, you lose the game.<br>
+
 ## third-party library
 This project use two libraries:<br>
 graph-v3: <https://github.com/stdgraph/graph-v3><br>
