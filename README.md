@@ -1,6 +1,10 @@
 # Hunting Wumpus
 'Hunting Wumpus' is a fan-made game adapted from the classic Hunt the Wumpus.<br>
 
+
+This project is inspired by an exercise from PPP3 by Bjarne Stroustrup.
+
+
 This project is licensed under the [MIT License](LICENSE.txt).<br>
 You are free to use, modify, merge, distribute, and even use the source code for commercial purposes.<br>
 When you distribute copies or derivative works, you must retain the original copyright notice and the MIT license text.<br>
