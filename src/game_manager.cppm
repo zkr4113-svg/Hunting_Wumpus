@@ -15,17 +15,26 @@ public:
 
 	}
 
+	//the main loop of the game
 	void game_loop();
 
 
 private:
+	// the cave map
 	graph::container::undirected_adjacency_list<int, Vertex> m_graph_map;
+	//contains every room properties.
 	std::vector<Vertex> m_vertices;
 private:
+	//to check if game_over to end the main loop
 	bool game_over = false;
+	//to check if Wumpus dead. if it is true, the game over and judge win.
 	bool is_wumpus_dead = false;
+	//to check if player dead. if it is true, the game over and judge lose.
 	bool is_player_dead = false;
+	//to check if player move successfully.
 	bool is_player_move_successfully = true;
+	//to count the number of arrows.At first the player has 5 arrows.when player action 'shoot' process ssuccessfully,the number substract 1.
+	unsigned arrow_count{ 5 };
 private:
 	std::uint32_t random_num_gen(std::uint32_t min_number, std::uint32_t max_number);
 	std::uint32_t where_player(std::span<Vertex> v);
@@ -33,16 +42,32 @@ private:
 	void random_move_logic(const graph::container::undirected_adjacency_list<int, Vertex>& g, std::vector<Vertex>& vertices,
 		Vertex::StateFlags flag);
 private:
+	//wumpus behavouirs
 	void wumpus_update(const graph::container::undirected_adjacency_list<int, Vertex>& g, std::vector<Vertex>& vertices);
-	void bug_update(const graph::container::undirected_adjacency_list<int, Vertex>& g, std::vector<Vertex>& vertices);
+	//bat behavouirs
+	void bat_update(const graph::container::undirected_adjacency_list<int, Vertex>& g, std::vector<Vertex>& vertices);
+	//player behavouris
 	void player_update(const PlayerController& st, const graph::container::undirected_adjacency_list<int, Vertex>& g, std::vector<Vertex>& vertices);
 private:
-	void player_move_logic(const PlayerController& st, std::vector<Vertex>& vertices, std::uint32_t player_position);
+	//player actions logic
+	//
+	//player move
+	void player_move_logic(const PlayerController& st, const graph::container::undirected_adjacency_list<int, Vertex>& g, std::vector<Vertex>& vertices, std::uint32_t player_position);
+	//player shoot
 	void player_shoot_logic(const PlayerController& st, const graph::container::undirected_adjacency_list<int, Vertex>& g, std::vector<Vertex>& vertices, std::uint32_t player_position);
+	//
 	void random_shoot_logic(std::vector<Vertex>& vertices);
 private:
+	//helper functions
+	// 
+	//print the graph's structure.
 	void print_graph(const graph::container::undirected_adjacency_list<int, Vertex>& g, std::span<Vertex> v);
+	//print the state of every vertex.
 	void debug_state(std::span<Vertex> vertices);
+	//print the ids of player_position in the graph.
 	void print_roads(const graph::container::undirected_adjacency_list<int, Vertex>& g, std::uint32_t player_position) const;
+	//print the informations of neighbors of player_position to help player judge the situation.
 	void feel_something(const graph::container::undirected_adjacency_list<int, Vertex>& g, const std::vector<Vertex>& vertices, std::uint32_t player_position) const;
+	//get the pos neighbors.
+	auto get_neighbors(const graph::container::undirected_adjacency_list<int, Vertex>& g, std::uint32_t position) -> std::vector<std::uint32_t>;
 };

@@ -39,7 +39,7 @@ int RoomGen::random_num_gen(int min_number, int max_number)
 
 auto RoomGen::init_vertices_id() -> std::vector<int>
 {
-	const int graph_size_min{ 5 }, graph_size_max{ 15 };
+	const int graph_size_min{ 6 }, graph_size_max{ 15 };
 
 	int graph_size = random_num_gen(graph_size_min, graph_size_max);
 
@@ -80,7 +80,7 @@ void RoomGen::init_vertices(std::vector<Vertex>& vertices)
 	std::mt19937 bh_gen{ std::random_device{ }() };
 	std::ranges::sample(exclude_player_and_wumpus_indexs, std::back_inserter(bugs_and_hole_position), 2, bh_gen);
 
-	vertices[bugs_and_hole_position[0]].set_state(Vertex::StateFlags::bug_state);
+	vertices[bugs_and_hole_position[0]].set_state(Vertex::StateFlags::bat_state);
 	vertices[bugs_and_hole_position[1]].set_state(Vertex::StateFlags::hole_state);
 	std::println(std::cerr, "player_and_wumpus positons: {:n}", player_wumpus_positions);
 }

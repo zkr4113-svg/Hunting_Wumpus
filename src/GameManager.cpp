@@ -10,9 +10,7 @@ void GameManager::game_loop()
 		auto player_position{ where_player(m_vertices) };
 		print_roads(m_graph_map, player_position);
 		feel_something(m_graph_map, m_vertices, player_position);
-		std::println(std::cerr, "Before Moving:");
-		debug_state(m_vertices);
-		std::println("=========================");
+		std::println("I have {} arrows left.", arrow_count);
 		std::println("move or shoot?");
 		PlayerController player{ };
 		std::string cmd;
@@ -26,7 +24,7 @@ void GameManager::game_loop()
 			if (is_player_move_successfully)
 			{
 				wumpus_update(m_graph_map, m_vertices);
-				bug_update(m_graph_map, m_vertices);
+				bat_update(m_graph_map, m_vertices);
 			}
 		}
 		else
@@ -34,12 +32,27 @@ void GameManager::game_loop()
 			std::println(std::cerr, "parse worng");
 		}
 		
+		for (std::size_t i{ }; i < m_vertices.size(); ++i)
+		{
+			if (m_vertices[i].get_state().test(std::to_underlying(Vertex::StateFlags::wumpus_state)) &&
+				m_vertices[i].get_state().test(std::to_underlying(Vertex::StateFlags::player_state)))
+			{
+				std::println("shit,I met the fucking Wumpus...");
+				is_player_dead = true;
+				break;
+			}
+
+			if (m_vertices[i].get_state().test(std::to_underlying(Vertex::StateFlags::bat_state)) &&
+				m_vertices[i].get_state().test(std::to_underlying(Vertex::StateFlags::player_state)))
+			{
+				std::println("I met the bat, where is it taking me?");
+				random_move_logic(m_graph_map, m_vertices, Vertex::StateFlags::player_state);
+				break;
+			}
+
+		}
 
 		check_if_win();
-		std::println("=========================");
-		std::println(std::cerr, "After Moving:");
-		debug_state(m_vertices);
-		
 	}
 }
 
@@ -98,12 +111,7 @@ void GameManager::random_move_logic(const graph::container::undirected_adjacency
 			position = static_cast<std::uint32_t>(i);
 		}
 	}
-
-	std::vector<std::uint32_t> neighbors;
-	for (auto [vid, n] : graph::views::neighbors(g, position))
-	{
-		neighbors.push_back(static_cast<std::uint32_t>(vid));
-	}
+	std::vector<std::uint32_t> neighbors = get_neighbors(g, position);
 
 	auto where_to_go{ random_num_gen(0,static_cast<std::uint32_t>(neighbors.size() - 1)) };
 
@@ -119,49 +127,90 @@ void GameManager::wumpus_update(const graph::container::undirected_adjacency_lis
 	}
 }
 
-void GameManager::bug_update(const graph::container::undirected_adjacency_list<int, Vertex>& g, std::vector<Vertex>& vertices)
+void GameManager::bat_update(const graph::container::undirected_adjacency_list<int, Vertex>& g, std::vector<Vertex>& vertices)
 {
-	random_move_logic(g, vertices, Vertex::StateFlags::bug_state);
-
-	for (std::size_t i{ }; i < vertices.size(); ++i)
-	{
-		if (vertices[i].get_state().test(std::to_underlying(Vertex::StateFlags::bug_state)) &&
-			vertices[i].get_state().test(std::to_underlying(Vertex::StateFlags::player_state)))
-		{
-			random_move_logic(g, vertices, Vertex::StateFlags::player_state);
-		}
-	}
+	random_move_logic(g, vertices, Vertex::StateFlags::bat_state);
 }
 
 void GameManager::player_update(const PlayerController& st, const graph::container::undirected_adjacency_list<int, Vertex>& g, std::vector<Vertex>& vertices)
 {
 	auto player_position{ where_player(vertices) };
+
+	std::vector<std::uint32_t> player_neighbors = get_neighbors(g, player_position);
+
 	if (st.player_action == PlayerAction::move)
 	{
-		if (st.room_id == 0)
-		{
-			player_move_logic(st, vertices, player_position);
-			is_player_move_successfully = true;
-			return;
-		}
 
 		bool is_in_vertices{ static_cast<std::size_t>(st.room_id) > 0 && static_cast<std::size_t>(st.room_id) < vertices.size() };
-		if ( is_in_vertices && graph::contains_edge(g, player_position, st.room_id))
+		bool is_in_neighbors{ };
+		for (std::size_t i{ }; i < player_neighbors.size(); ++i)
 		{
-			player_move_logic(st, vertices,player_position);
-			is_player_move_successfully = true;
+			if (st.room_id == player_neighbors[i])
+			{
+				is_in_neighbors = true;
+			}
 		}
-		else if (st.room_id == player_position)
+
+
+		if (is_in_vertices)
 		{
-			std::println("I am already here");
-			is_player_move_successfully = false;
+			if (is_in_neighbors)
+			{
+				if (graph::contains_edge(g, player_position, st.room_id))
+				{
+					player_move_logic(st, g, vertices, player_position);
+					is_player_move_successfully = true;
+				}
+				else if(st.room_id == player_position)
+				{
+					std::println("I am already here");
+					is_player_move_successfully = false;
+				}
+				else
+				{
+					std::println("I can't go there");
+					is_player_move_successfully = false;
+				}
+			}
+			else
+			{
+				std::println("I can't go there");
+				is_player_move_successfully = false;
+				
+			}
+			
+		}
+		else if (st.room_id == 0)
+		{
+			if (is_in_neighbors)
+			{
+				if (graph::contains_edge(g, player_position, st.room_id))
+				{
+					player_move_logic(st, g, vertices, player_position);
+					is_player_move_successfully = true;
+				}
+				else if (st.room_id == player_position)
+				{
+					std::println("I am already here");
+					is_player_move_successfully = false;
+				}
+				else
+				{
+					std::println("I can't go there");
+					is_player_move_successfully = false;
+				}
+			}
+			else
+			{
+				std::println("I can't go there");
+				is_player_move_successfully = false;
+			}
 		}
 		else
 		{
 			std::println("I can't go there");
 			is_player_move_successfully = false;
 		}
-
 	}
 	else if (st.player_action == PlayerAction::shoot)
 	{
@@ -170,14 +219,23 @@ void GameManager::player_update(const PlayerController& st, const graph::contain
 			return id >= 0 && static_cast<std::size_t>(id) < vertices.size();
 			})
 		};
-
-		if (all_in_vertices)
+		if (arrow_count > 0)
 		{
-			player_shoot_logic(st, g, vertices, player_position);
+			if (all_in_vertices)
+			{
+				player_shoot_logic(st, g, vertices, player_position);
+
+			}
+			else
+			{
+				random_shoot_logic(vertices);
+			}
+
+			arrow_count--;
 		}
 		else
 		{
-			random_shoot_logic(vertices);
+			std::println("I have no arrows left.");
 		}
 
 		if (!is_wumpus_dead)
@@ -188,30 +246,33 @@ void GameManager::player_update(const PlayerController& st, const graph::contain
 	}
 }
 
-void GameManager::player_move_logic(const PlayerController& st, std::vector<Vertex>& vertices, std::uint32_t player_position)
+void GameManager::player_move_logic(const PlayerController& st, const graph::container::undirected_adjacency_list<int, Vertex>& g, 
+	std::vector<Vertex>& vertices, std::uint32_t player_position)
 {
-	for (std::size_t i{ }; i < vertices.size(); ++i)
-	{
-		if (vertices[i].get_state().test(std::to_underlying(Vertex::StateFlags::hole_state)) &&
-			vertices[i].get_state().test(std::to_underlying(Vertex::StateFlags::player_state)))
-		{
-			is_player_dead = true;
-			break;
-		}
-
-		if (vertices[i].get_state().test(std::to_underlying(Vertex::StateFlags::wumpus_state)) &&
-			vertices[i].get_state().test(std::to_underlying(Vertex::StateFlags::player_state)))
-		{
-			is_player_dead = true;
-			break;
-		}
-	}
-
 	vertices[st.room_id].set_state(Vertex::StateFlags::player_state);
 	vertices[player_position].flip_state(Vertex::StateFlags::player_state);
+
+	if (vertices[st.room_id].get_state().test(std::to_underlying(Vertex::StateFlags::hole_state)))
+	{
+		std::println("OH NOOO!! there is a big hole!!!");
+		is_player_dead = true;
+	}
+
+	if (vertices[st.room_id].get_state().test(std::to_underlying(Vertex::StateFlags::wumpus_state)))
+	{
+		std::println("shit,I met the fucking Wumpus...");
+		is_player_dead = true;
+	}
+
+	if (vertices[st.room_id].get_state().test(std::to_underlying(Vertex::StateFlags::bat_state)))
+	{
+		std::println("I met the bat, where is it taking me?");
+		random_move_logic(g, vertices, Vertex::StateFlags::player_state);
+	}
 }
 
-void GameManager::player_shoot_logic(const PlayerController& st, const graph::container::undirected_adjacency_list<int, Vertex>& g, std::vector<Vertex>& vertices, std::uint32_t player_position)
+void GameManager::player_shoot_logic(const PlayerController& st, const graph::container::undirected_adjacency_list<int, Vertex>& g, 
+	std::vector<Vertex>& vertices, std::uint32_t player_position)
 {
 	std::vector<bool> three_rooms_states;
 	three_rooms_states.reserve(3);
@@ -221,6 +282,14 @@ void GameManager::player_shoot_logic(const PlayerController& st, const graph::co
 	{
 		three_rooms_states.push_back(graph::contains_edge(g, st.room_ids[i - 1], st.room_ids[i]));
 	}
+
+
+	if (st.room_ids[0] == player_position)
+	{
+		is_player_dead = true;
+		return;
+	}
+
 
 	if (bool is_three_rooms_through{ std::ranges::all_of(three_rooms_states,[](const auto elem) { return elem == true; }) }; is_three_rooms_through)
 	{
@@ -241,7 +310,7 @@ void GameManager::player_shoot_logic(const PlayerController& st, const graph::co
 	}
 	else
 	{
-		if (three_rooms_states[0])
+		if (arrow_count)
 		{
 			if (vertices[st.room_ids[0]].get_state().test(std::to_underlying(Vertex::StateFlags::wumpus_state)))
 			{
@@ -256,6 +325,7 @@ void GameManager::player_shoot_logic(const PlayerController& st, const graph::co
 		else
 		{
 			random_shoot_logic(vertices);
+			
 		}
 	}
 }
@@ -268,10 +338,13 @@ void GameManager::random_shoot_logic(std::vector<Vertex>& vertices)
 	{
 		is_wumpus_dead = true;
 	}
-
-	if (vertices[random_shoot].get_state().test(std::to_underlying(Vertex::StateFlags::player_state)))
+	else if (vertices[random_shoot].get_state().test(std::to_underlying(Vertex::StateFlags::player_state)))
 	{
 		is_player_dead = true;
+	}
+	else
+	{
+		std::println("I heard the arrow fall to the ground.");
 	}
 }
 
@@ -337,7 +410,7 @@ void GameManager::feel_something(const graph::container::undirected_adjacency_li
 	{
 		if (first_feel_bug)
 		{
-			if (vertices[index].get_state().test(std::to_underlying(Vertex::StateFlags::bug_state)))
+			if (vertices[index].get_state().test(std::to_underlying(Vertex::StateFlags::bat_state)))
 			{
 				std::println("I heard bugs.");
 				first_feel_bug = false;
@@ -358,4 +431,15 @@ void GameManager::feel_something(const graph::container::undirected_adjacency_li
 			std::println("I semll the stink of Wumpus. ");
 		}
 	}
+}
+
+auto GameManager::get_neighbors(const graph::container::undirected_adjacency_list<int, Vertex>& g, std::uint32_t position) -> std::vector<std::uint32_t>
+{
+	std::vector<std::uint32_t> neighbors;
+	for (auto [vid, n] : graph::views::neighbors(g, position))
+	{
+		neighbors.push_back(static_cast<std::uint32_t>(vid));
+	}
+
+	return neighbors;
 }

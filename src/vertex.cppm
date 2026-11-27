@@ -11,10 +11,8 @@ public:
 		player_state = 0,
 		wumpus_state,
 		hole_state,
-		bug_state
+		bat_state
 	};
-
-
 
 	Vertex(int id = -1, std::bitset<4> state = 0)
 		:m_id{ id }, m_bitset{ state }
