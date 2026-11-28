@@ -75,4 +75,19 @@ private:
 	void output_msg(std::string_view msg) const;
 	//print debug message
 	void debug_msg(std::ostream& out, std::string_view msg) const;
+
+private:
+	//cross platform function.
+	void clear_screen() const
+	{
+		std::print("\x1b[2J\x1b[3J\x1b[H");
+		std::fflush(stdout);
+	}
+
+	void pause() const
+	{
+		std::print("Press Enter to continue...");
+		std::string dummy;
+		std::getline(std::cin, dummy);
+	}
 };

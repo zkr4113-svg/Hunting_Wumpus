@@ -1,3 +1,8 @@
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <windows.h>
+#endif
 #include <graph/graph.hpp>
 #include <graph/container/undirected_adjacency_list.hpp>
 
@@ -8,6 +13,29 @@ import game_manager;
 
 namespace
 {
+	void init_console()
+	{
+		HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);
+		DWORD mode{ };
+		if (GetConsoleMode(out, &mode))
+			SetConsoleMode(out, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+	}
+
+	void clear_screen()
+	{
+		std::print("\x1b[2J\x1b[3J\x1b[H");
+		std::fflush(stdout);
+	}
+
+	void pause()
+	{
+		std::print("Press Enter to continue...");
+		std::string dummy;
+		std::getline(std::cin, dummy);
+	}
+
+
+
 	int read_choice()
 	{
 		std::string line;
@@ -34,6 +62,11 @@ namespace
 
 int main()
 {
+#ifdef _WIN32
+	SetConsoleOutputCP(CP_UTF8);
+	SetConsoleCP(CP_UTF8);
+#endif // _WIN32
+
 	RoomGen room_generator;
 	auto [graph_map, vertices] = room_generator.create();
 
@@ -43,13 +76,14 @@ int main()
 	{
 		while (true)
 		{
+			clear_screen();
 			game_manager.game_menu();
 			
 			int op = read_choice();
 			switch (op)
 			{
 			case 1:
-				system("cls");
+				clear_screen();
 				game_manager.game_loop();
 				break;
 			case 2:
@@ -58,11 +92,12 @@ int main()
 				break;
 			}
 
-			system("pause");
+			pause();
 		}
 	}
 	catch (const std::exception& e)
 	{
 		std::println(std::cerr, "ERROR: {}", e.what());
+		return 1;
 	}
 }

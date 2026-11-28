@@ -55,7 +55,7 @@ void GameManager::game_loop()
 
 		check_if_win();
 
-		system("cls");
+		clear_screen();
 	}
 }
 
@@ -460,11 +460,11 @@ auto GameManager::get_neighbors(const graph::container::undirected_adjacency_lis
 void GameManager::output_msg(std::string_view msg) const
 {
 	std::println("{}", msg);
-	system("pause");
+	pause();
 }
 
 void GameManager::debug_msg(std::ostream& out, std::string_view msg) const
 {
 	std::println(out, "{}", msg);
-	system("pause");
+	pause();
 }
