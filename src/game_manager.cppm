@@ -17,7 +17,8 @@ public:
 
 	//the main loop of the game
 	void game_loop();
-
+	//the menu of the game
+	void game_menu();
 
 private:
 	// the cave map
@@ -70,4 +71,8 @@ private:
 	void feel_something(const graph::container::undirected_adjacency_list<int, Vertex>& g, const std::vector<Vertex>& vertices, std::uint32_t player_position) const;
 	//get the pos neighbors.
 	auto get_neighbors(const graph::container::undirected_adjacency_list<int, Vertex>& g, std::uint32_t position) -> std::vector<std::uint32_t>;
+	//print game message
+	void output_msg(std::string_view msg) const;
+	//print debug message
+	void debug_msg(std::ostream& out, std::string_view msg) const;
 };

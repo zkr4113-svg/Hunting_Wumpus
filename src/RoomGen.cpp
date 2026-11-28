@@ -82,14 +82,11 @@ void RoomGen::init_vertices(std::vector<Vertex>& vertices)
 
 	vertices[bugs_and_hole_position[0]].set_state(Vertex::StateFlags::bat_state);
 	vertices[bugs_and_hole_position[1]].set_state(Vertex::StateFlags::hole_state);
-	std::println(std::cerr, "player_and_wumpus positons: {:n}", player_wumpus_positions);
 }
 
 
 auto RoomGen::create() -> graph_and_vertices
 {
-	std::println("{:n}", m_vertices_id);
-
 	std::vector<Vertex> vertices(m_vertices_id.size(), Vertex{ 0,0 });
 	init_vertices(vertices);
 	graph::container::undirected_adjacency_list<int, Vertex> graph_map;

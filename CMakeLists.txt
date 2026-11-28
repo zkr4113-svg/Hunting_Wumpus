@@ -31,6 +31,8 @@ set_target_properties(pegtl PROPERTIES
 
 add_executable (Hunting_Wumpus "src/main.cpp"  "src/RoomGen.cpp"  "src/GameManager.cpp")
 
+target_compile_options(Hunting_Wumpus PRIVATE
+  $<$<CXX_COMPILER_ID:MSVC>:/utf-8>)
 
 target_sources(
 Hunting_Wumpus

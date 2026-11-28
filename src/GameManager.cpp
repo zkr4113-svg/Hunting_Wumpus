@@ -29,7 +29,7 @@ void GameManager::game_loop()
 		}
 		else
 		{
-			std::println(std::cerr, "parse worng");
+			debug_msg(std::cerr, "parse worng");
 		}
 		
 		for (std::size_t i{ }; i < m_vertices.size(); ++i)
@@ -37,15 +37,16 @@ void GameManager::game_loop()
 			if (m_vertices[i].get_state().test(std::to_underlying(Vertex::StateFlags::wumpus_state)) &&
 				m_vertices[i].get_state().test(std::to_underlying(Vertex::StateFlags::player_state)))
 			{
-				std::println("shit,I met the fucking Wumpus...");
+				output_msg("shit,I met the fucking Wumpus...");
 				is_player_dead = true;
+				
 				break;
 			}
 
 			if (m_vertices[i].get_state().test(std::to_underlying(Vertex::StateFlags::bat_state)) &&
 				m_vertices[i].get_state().test(std::to_underlying(Vertex::StateFlags::player_state)))
 			{
-				std::println("I met the bat, where is it taking me?");
+				output_msg("I met the bat, where is it taking me?");
 				random_move_logic(m_graph_map, m_vertices, Vertex::StateFlags::player_state);
 				break;
 			}
@@ -53,7 +54,19 @@ void GameManager::game_loop()
 		}
 
 		check_if_win();
+
+		system("cls");
 	}
+}
+
+void GameManager::game_menu()
+{
+	std::println("==================");
+	std::println("Hunting Wumpus");
+	std::println("  Made by Zhi Kairui");
+	std::println("==================");
+	std::println("1. start game");
+	std::println("2. quit");
 }
 
 std::uint32_t GameManager::random_num_gen(std::uint32_t min_number, std::uint32_t max_number)
@@ -69,13 +82,13 @@ void GameManager::check_if_win()
 {
 	if (is_wumpus_dead)
 	{
-		std::println("wumpus is dead");
+		output_msg("wumpus is dead, you win!");
 		game_over = true;
 	}
 
 	if (is_player_dead)
 	{
-		std::println(std::cerr, "player is dead");
+		output_msg("player is dead, you lose...");
 		game_over = true;
 	}
 }
@@ -163,18 +176,18 @@ void GameManager::player_update(const PlayerController& st, const graph::contain
 				}
 				else if(st.room_id == player_position)
 				{
-					std::println("I am already here");
+					output_msg("I am already here");
 					is_player_move_successfully = false;
 				}
 				else
 				{
-					std::println("I can't go there");
+					output_msg("I can't go there");
 					is_player_move_successfully = false;
 				}
 			}
 			else
 			{
-				std::println("I can't go there");
+				output_msg("I can't go there");
 				is_player_move_successfully = false;
 				
 			}
@@ -191,24 +204,24 @@ void GameManager::player_update(const PlayerController& st, const graph::contain
 				}
 				else if (st.room_id == player_position)
 				{
-					std::println("I am already here");
+					output_msg("I am already here");
 					is_player_move_successfully = false;
 				}
 				else
 				{
-					std::println("I can't go there");
+					output_msg("I can't go there");
 					is_player_move_successfully = false;
 				}
 			}
 			else
 			{
-				std::println("I can't go there");
+				output_msg("I can't go there");
 				is_player_move_successfully = false;
 			}
 		}
 		else
 		{
-			std::println("I can't go there");
+			output_msg("I can't go there");
 			is_player_move_successfully = false;
 		}
 	}
@@ -235,7 +248,7 @@ void GameManager::player_update(const PlayerController& st, const graph::contain
 		}
 		else
 		{
-			std::println("I have no arrows left.");
+			output_msg("I have no arrows left.");
 		}
 
 		if (!is_wumpus_dead)
@@ -254,19 +267,19 @@ void GameManager::player_move_logic(const PlayerController& st, const graph::con
 
 	if (vertices[st.room_id].get_state().test(std::to_underlying(Vertex::StateFlags::hole_state)))
 	{
-		std::println("OH NOOO!! there is a big hole!!!");
+		output_msg("OH NOOO!! there is a big hole!!!");
 		is_player_dead = true;
 	}
 
 	if (vertices[st.room_id].get_state().test(std::to_underlying(Vertex::StateFlags::wumpus_state)))
 	{
-		std::println("shit,I met the fucking Wumpus...");
+		output_msg("shit,I met the fucking Wumpus...");
 		is_player_dead = true;
 	}
 
 	if (vertices[st.room_id].get_state().test(std::to_underlying(Vertex::StateFlags::bat_state)))
 	{
-		std::println("I met the bat, where is it taking me?");
+		output_msg("I met the bat, where is it taking me?");
 		random_move_logic(g, vertices, Vertex::StateFlags::player_state);
 	}
 }
@@ -412,7 +425,7 @@ void GameManager::feel_something(const graph::container::undirected_adjacency_li
 		{
 			if (vertices[index].get_state().test(std::to_underlying(Vertex::StateFlags::bat_state)))
 			{
-				std::println("I heard bugs.");
+				std::println("I heard bats.");
 				first_feel_bug = false;
 			}
 		}
@@ -428,7 +441,7 @@ void GameManager::feel_something(const graph::container::undirected_adjacency_li
 
 		if (vertices[index].get_state().test(std::to_underlying(Vertex::StateFlags::wumpus_state)))
 		{
-			std::println("I semll the stink of Wumpus. ");
+			std::println("I semll the stink of Wumpus.");
 		}
 	}
 }
@@ -442,4 +455,16 @@ auto GameManager::get_neighbors(const graph::container::undirected_adjacency_lis
 	}
 
 	return neighbors;
+}
+
+void GameManager::output_msg(std::string_view msg) const
+{
+	std::println("{}", msg);
+	system("pause");
+}
+
+void GameManager::debug_msg(std::ostream& out, std::string_view msg) const
+{
+	std::println(out, "{}", msg);
+	system("pause");
 }
