@@ -1,5 +1,5 @@
 # Hunting Wumpus
-'Hunting Wumpus' is a fan-made game adapted from the classic Hunt the Wumpus.<br>
+'Hunting Wumpus' is a crossplatforms fan-made game adapted from the classic Hunt the Wumpus.<br>
 
 
 This project is inspired by an exercise from PPP3 by Bjarne Stroustrup.
